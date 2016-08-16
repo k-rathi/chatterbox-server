@@ -37,3 +37,10 @@ module.exports = {
   }
 
 };
+// var stubMsg = {
+//       username: 'Jono',
+//       message: 'Do my bidding!'
+//     };
+    // var req = new stubs.request('/classes/room', 'POST', stubMsg);
+    // var res = new stubs.response();
+
