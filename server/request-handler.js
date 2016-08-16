@@ -12,11 +12,14 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 var url = require('url');
-
+var fs = require('fs');
+var path = require('path');
+// var $ = require('jQuery');
 results = [{username: 'player1', text: 'hello', roomname: 'lobby', createdAt: new Date()}];
 
 var requestHandler = function(request, response) {
-  
+  console.log(url.parse(request.url).pathname);
+  console.log(process.cwd());
   var defaultCorsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -38,14 +41,36 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'application/json';
 
   // Documentation for both request and response can be found in the HTTP section at
   // http://nodejs.org/documentation/api/
   var messages = {results: results};
     //[{username: 'player 1', text: 'hello', roomname: 'lobby', createdAt: new Date()}, {username: 'player2', text: 'hello back', roomname: 'lobby', createdAt: new Date()}, {username: 'player3', text:'goodbye', roomname: 'lobby2', createdAt: new Date()}]};
 
-  if (request.method === 'GET' && request.url === '/classes/messages') {
+  if (request.method === 'GET' && request.url === '/') {
+    headers['Content-Type'] = 'text/html';
+    response.writeHead(statusCode, headers);
+    fs.readdir('../client/', function(err, data) {
+      console.log(response._header);
+      var file = Buffer(data).toString();
+      response.write(file);
+    //   data.on('data', function(chunk) {
+    //     body.push(chunk);
+    //   }).on('end', function() {
+    //     body = Buffer.concat(body).toString();
+    //     console.log(body);
+    //   });
+
+    });
+
+  }
+  // headers['Content-Type'] = 'application/json';
+  if (request.method === 'OPTIONS') {
+    statusCode = 200;
+    response.writeHead(statusCode, headers);
+  }
+
+  else if (request.method === 'GET' && request.url === '/classes/messages') {
   // Do some basic logging.
   //
   // Adding more logging to your server can be an easy way to get passive
@@ -97,7 +122,7 @@ var requestHandler = function(request, response) {
   response.writeHead(statusCode, headers);
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end(JSON.stringify(messages));
+  // response.end(JSON.stringify(messages));
 };
 
 // These headers will allow Cross-Origin Resource Sharing (CORS).
