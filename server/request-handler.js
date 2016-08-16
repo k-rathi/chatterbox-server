@@ -15,11 +15,14 @@ var url = require('url');
 var fs = require('fs');
 var path = require('path');
 // var $ = require('jQuery');
-results = [{username: 'player1', text: 'hello', roomname: 'lobby', createdAt: new Date()}];
+results = [{
+  username: 'player1',
+  text: 'hello',
+  roomname: 'lobby',
+  createdAt: new Date()
+}];
 
 var requestHandler = function(request, response) {
-  console.log(url.parse(request.url).pathname);
-  console.log(process.cwd());
   var defaultCorsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -44,38 +47,28 @@ var requestHandler = function(request, response) {
 
   // Documentation for both request and response can be found in the HTTP section at
   // http://nodejs.org/documentation/api/
-  var messages = {results: results};
-    //[{username: 'player 1', text: 'hello', roomname: 'lobby', createdAt: new Date()}, {username: 'player2', text: 'hello back', roomname: 'lobby', createdAt: new Date()}, {username: 'player3', text:'goodbye', roomname: 'lobby2', createdAt: new Date()}]};
+  var messages = {
+    results: results
+  };
+  //[{username: 'player 1', text: 'hello', roomname: 'lobby', createdAt: new Date()}, {username: 'player2', text: 'hello back', roomname: 'lobby', createdAt: new Date()}, {username: 'player3', text:'goodbye', roomname: 'lobby2', createdAt: new Date()}]};
 
-  if (request.method === 'GET' && request.url === '/') {
-    headers['Content-Type'] = 'text/html';
-    response.writeHead(statusCode, headers);
-    fs.readdir('../client/', function(err, data) {
-      console.log(response._header);
-      var file = Buffer(data).toString();
-      response.write(file);
-    //   data.on('data', function(chunk) {
-    //     body.push(chunk);
-    //   }).on('end', function() {
-    //     body = Buffer.concat(body).toString();
-    //     console.log(body);
-    //   });
-
-    });
-
-  }
   // headers['Content-Type'] = 'application/json';
+
+
   if (request.method === 'OPTIONS') {
     statusCode = 200;
     response.writeHead(statusCode, headers);
-  }
-
-  else if (request.method === 'GET' && request.url === '/classes/messages') {
-  // Do some basic logging.
-  //
-  // Adding more logging to your server can be an easy way to get passive
-  // debugging help, but you should always be careful about leaving stray
-  // console.logs in your code.
+  } else if (request.method === 'GET' && request.url === '/classes/messages') {
+    console.log('hello');
+    statusCode = 200;
+    response.writeHead(statusCode, headers);
+    console.log(messages);
+    response.end(JSON.stringify(messages));
+    // Do some basic logging.
+    //
+    // Adding more logging to your server can be an easy way to get passive
+    // debugging help, but you should always be careful about leaving stray
+    // console.logs in your code.
 
   } else if (request.method === 'POST' && request.url === '/classes/messages') {
     statusCode = 201;
@@ -90,16 +83,20 @@ var requestHandler = function(request, response) {
       body.createdAt = new Date();
       body.objectId = body.createdAt;
       results.push(body);
-      messages = {results: results};
-           // at this point, `body` has the entire request body stored in it as a string
-    }); 
+      messages = {
+        results: results
+      };
+      // at this point, `body` has the entire request body stored in it as a string
+    });
 
   } else if (request.method === 'POST' && request.url === '/classes/room') {
     statusCode = 201;
 
     var body = [];
     results.push(request._postData);
-    messages = {results: results};
+    messages = {
+      results: results
+    };
     // request.on('data', function(chunk) {
     //   body.push(chunk);
     // }).on('end', function() {
@@ -109,9 +106,35 @@ var requestHandler = function(request, response) {
     //        // at this point, `body` has the entire request body stored in it as a string
     // }); 
 
-  }else if (request.url === '/arglebargle') { 
+  } else if (request.method === 'GET') {
+
+    if (request.url === '/' || request.url.indexOf('?') !== -1) {
+      request.url = '/index.html';
+    }
+    var filePath = '../client' + request.url;
+    var extname = String(path.extname(filePath)).toLowerCase();
+    var contentType = 'text/html';
+    var mimeTypes = {
+      '.html': 'text/html',
+      '.js': 'text/javascript',
+      '.css': 'text/css',
+    };
+
+    contentType = mimeTypes[extname];
+
+    fs.exists(filePath, function(exists) {
+      if (exists) {
+        response.writeHead(200, {
+          'content-type': contentType
+        });
+        fs.createReadStream(filePath).pipe(response);
+      }
+    });
+  } else {
     statusCode = 404;
-  }// .writeHead() writes to the request line and headers of the response,
+    response.writeHead(statusCode, headers);
+    response.end();
+  } // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
 
   // Make sure to always call response.end() - Node may not send
